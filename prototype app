@@ -65,12 +65,11 @@ def contract_length_discount(length):
         return 0.0  # No discount for unknown contract lengths
 
 
-# Function to print available roles
+# Function to print available roles and their rates
 def print_available_roles(roles):
     print("Available roles:")
     for index, role in enumerate(roles, start=1):
         print(f"{index}. {role['name']} (${role['rate_per_hour']:.2f} per hour)")
-
 
 # Main function to run the resource tracker program
 def main():
@@ -110,19 +109,25 @@ def main():
         print(f"{len(available_roles) + 1}. Add a new role")
         print(f"{len(available_roles) + 2}. Quit")
 
-        choice = int(input(f"Enter the number of the role (1-{len(available_roles) + 2}) you want to add or "
-                           f"{len(available_roles) + 2} to quit: "))
+        choice = input(f"Enter the number of the role (1-{len(available_roles) + 2}) you want to add or "
+                       f"{len(available_roles) + 2} to quit: ").strip()
 
         # Handle user choices
-        if choice == len(available_roles) + 2:
+        if choice == str(len(available_roles) + 2):
             break
-        elif choice == len(available_roles) + 1:
-            name = input("Enter the name of the new role:" )
+        elif choice == str(len(available_roles) + 1):
+            name = input("Enter the name of the new role: ")
             rate_per_hour = float(input("Enter the billable rate per hour for the new role: "))
             resource_tracker.add_new_role(name, rate_per_hour)
             available_roles.append({"name": name, "rate_per_hour": rate_per_hour})
-        elif choice in range(1, len(available_roles) + 1):
-            role_data = available_roles[choice - 1]
+        elif choice.isdigit() and 1 <= int(choice) <= len(available_roles):
+            role_data = available_roles[int(choice) - 1]
+            print(f"Current rate for {role_data['name']}: ${role_data['rate_per_hour']:.2f} per hour")
+            new_rate_input = input("Enter the new rate per hour for this role (or leave it empty to keep the current rate): ")
+            if new_rate_input.strip():
+                new_rate = float(new_rate_input)
+                role_data['rate_per_hour'] = new_rate
+
             role = Role(role_data['name'], role_data['rate_per_hour'])
             quantity = int(input(f"Enter the quantity for {role_data['name']}: "))
             resource_tracker.add_role(role, quantity, contract_length)
@@ -151,3 +156,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
