@@ -1,0 +1,153 @@
+# Define the Role class to store role information
+class Role:
+    def __init__(self, name, rate_per_hour):
+        self.name = name
+        self.rate_per_hour = rate_per_hour
+
+
+# Define the ResourceTracker class to manage roles and quantities
+class ResourceTracker:
+    def __init__(self):
+        self.roles = {}  # Dictionary to store Role objects and their quantities
+        self.next_role_number = 1
+
+    # Add a role to the resource tracker with the given quantity and contract length
+    def add_role(self, role, quantity, contract_length):
+        if role.name in self.roles:
+            self.roles[role.name]['quantity'] += quantity
+            self.roles[role.name]['contract_length'] = contract_length
+        else:
+            self.roles[role.name] = {
+                'role': role,
+                'quantity': quantity,
+                'contract_length': contract_length,
+            }
+
+    # Calculate the blended rate and the total billable amount
+    def calculate_blended_rate(self):
+        total_billable_amount = 0.0
+        total_quantity = 0
+
+        for role_data in self.roles.values():
+            role = role_data['role']
+            quantity = role_data['quantity']
+            contract_length = role_data['contract_length']
+            discount_rate = contract_length_discount(contract_length)
+
+            # Apply the hourly rate, contract length discount, and the 8% increase for each person
+            total_billable_amount += (role.rate_per_hour * (1 - discount_rate)) * 1.08 * quantity
+            total_quantity += quantity
+
+        if total_quantity == 0:
+            return 0.0
+
+        # Calculate the blended rate per hour
+        blended_rate = total_billable_amount / total_quantity
+        return blended_rate, total_billable_amount
+
+    # Add a new role to the resource tracker
+    def add_new_role(self, name, rate_per_hour):
+        role = Role(name, rate_per_hour)
+        self.roles[name] = {'role': role, 'quantity': 0}
+        print(f"{name} with rate ${rate_per_hour:.2f} per hour added as Role {self.next_role_number}")
+        self.next_role_number += 1
+
+
+# Function to calculate the discount based on contract length
+def contract_length_discount(length):
+    if length == "1 year":
+        return 0.05
+    elif length == "2 years":
+        return 0.10
+    elif length == "3 years":
+        return 0.135
+    else:
+        return 0.0  # No discount for unknown contract lengths
+
+
+# Function to print available roles
+def print_available_roles(roles):
+    print("Available roles:")
+    for index, role in enumerate(roles, start=1):
+        print(f"{index}. {role['name']} (${role['rate_per_hour']:.2f} per hour)")
+
+
+# Main function to run the resource tracker program
+def main():
+    available_roles = [
+        {"name": "Project Manager", "rate_per_hour": 95.00},
+        {"name": "Senior Developer", "rate_per_hour": 125.00},
+        {"name": "Junior Developer", "rate_per_hour": 95.00},
+        {"name": "Process Engineer", "rate_per_hour": 105.00},
+        {"name": "Functional Architect", "rate_per_hour": 115.00},
+        {"name": "Technical Architect", "rate_per_hour": 125.00},
+        {"name": "Senior QA Engineer", "rate_per_hour": 75.00},
+        {"name": "Junior QA Engineer", "rate_per_hour": 55.00},
+        {"name": "Support", "rate_per_hour": 45.00},
+    ]
+
+    resource_tracker = ResourceTracker()
+
+    # Get the contract length input from the user and set the year_discount accordingly
+    contract_length_input = input("Enter the contract length (1, 2, or 3 years): ").strip().lower()
+    if contract_length_input == '1':
+        contract_length = "1 year"
+        year_discount = 0.05
+    elif contract_length_input == '2':
+        contract_length = "2 years"
+        year_discount = 0.10
+    elif contract_length_input == '3':
+        contract_length = "3 years"
+        year_discount = 0.135
+    else:
+        print("Invalid input. Setting the contract length to 1 year.")
+        contract_length = "1 year"
+        year_discount = 0.05
+
+    while True:
+        # Show available roles and options
+        print_available_roles(available_roles)
+        print(f"{len(available_roles) + 1}. Add a new role")
+        print(f"{len(available_roles) + 2}. Quit")
+
+        choice = int(input(f"Enter the number of the role (1-{len(available_roles) + 2}) you want to add or "
+                           f"{len(available_roles) + 2} to quit: "))
+
+        # Handle user choices
+        if choice == len(available_roles) + 2:
+            break
+        elif choice == len(available_roles) + 1:
+            name = input("Enter the name of the new role:" )
+            rate_per_hour = float(input("Enter the billable rate per hour for the new role: "))
+            resource_tracker.add_new_role(name, rate_per_hour)
+            available_roles.append({"name": name, "rate_per_hour": rate_per_hour})
+        elif choice in range(1, len(available_roles) + 1):
+            role_data = available_roles[choice - 1]
+            role = Role(role_data['name'], role_data['rate_per_hour'])
+            quantity = int(input(f"Enter the quantity for {role_data['name']}: "))
+            resource_tracker.add_role(role, quantity, contract_length)
+
+            add_another = input("Do you want to add another role? (yes/no): ").lower()
+            if add_another != "yes":
+                break
+        else:
+            print("Invalid choice. Please try again.")
+            continue
+
+    # Calculate the blended rate and total billable amount
+    blended_rate, total_billable_amount = resource_tracker.calculate_blended_rate()
+    print(f"Blended billable rate for {contract_length}: ${blended_rate:.2f} per hour")
+
+    # Calculate the total bill based on the selected contract length and apply the year discount
+    total_bill = 50 * 46 * total_billable_amount * (1 - year_discount)
+    print(f"Total bill for {contract_length}: ${total_bill:.2f}")
+
+    restart = input("Do you want to reset and start over? (yes/no): ").lower()
+    if restart == "yes":
+        main()
+    else:
+        print("Program ended.")
+
+
+if __name__ == "__main__":
+    main()
