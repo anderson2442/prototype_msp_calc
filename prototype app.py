@@ -61,17 +61,8 @@ class ResourceTrackerApp(tk.Tk):
         self.resource_tracker = ResourceTracker()
 
         self.available_roles = [
-            {"name": "Project Manager", "rate_per_hour": 95.00},
-            {"name": "Senior Developer", "rate_per_hour": 125.00},
-            {"name": "Junior Developer", "rate_per_hour": 95.00},
-            {"name": "Process Engineer", "rate_per_hour": 105.00},
-            {"name": "Functional Architect", "rate_per_hour": 115.00},
-            {"name": "Technical Architect", "rate_per_hour": 125.00},
-            {"name": "Senior QA Engineer", "rate_per_hour": 75.00},
-            {"name": "Junior QA Engineer", "rate_per_hour": 55.00},
-            {"name": "Support", "rate_per_hour": 45.00},
+            # Role data...
         ]
-
 
         self.create_widgets()
 
