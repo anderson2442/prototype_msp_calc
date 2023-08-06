@@ -11,69 +11,70 @@ class ResourceTracker:
         self.roles = {}  # Dictionary to store Role objects and their quantities
         self.next_role_number = 1
 
-    # Add a role to the resource tracker with the given quantity and contract length
-    def add_role(self, role, quantity, contract_length):
+    def add_role(self, role, quantity):
+        """
+        Add a role to the resource tracker with the given quantity. If the role already exists, update the quantity.
+        :param role: Role object to add
+        :param quantity: Quantity to add for the role
+        """
         if role.name in self.roles:
             self.roles[role.name]['quantity'] += quantity
-            self.roles[role.name]['contract_length'] = contract_length
         else:
             self.roles[role.name] = {
                 'role': role,
                 'quantity': quantity,
-                'contract_length': contract_length,
             }
 
-    # Calculate the blended rate and the total billable amount
-    def calculate_blended_rate(self):
+    def calculate_blended_rate(self, weeks, discount_percentage=0):
+        """
+        Calculate the blended rate and the total billable amount after applying the discount for the given weeks.
+        :param weeks: Number of weeks to apply the discount for
+        :param discount_percentage: Discount percentage to apply
+        :return: Blended rate per hour and total billable amount after applying the discount
+        """
         total_billable_amount = 0.0
         total_quantity = 0
 
         for role_data in self.roles.values():
             role = role_data['role']
             quantity = role_data['quantity']
-            contract_length = role_data['contract_length']
-            discount_rate = contract_length_discount(contract_length)
 
-            # Apply the hourly rate, contract length discount, and the 8% increase for each person
-            total_billable_amount += (role.rate_per_hour * (1 - discount_rate)) * 1.08 * quantity
+            # Calculate the total billable amount for each role after applying the discount for the given weeks
+            total_billable_amount += role.rate_per_hour * quantity * weeks * (1 - discount_percentage / 100)
             total_quantity += quantity
 
         if total_quantity == 0:
             return 0.0
 
-        # Calculate the blended rate per hour
-        blended_rate = total_billable_amount / total_quantity
+        # Calculate the blended rate per hour after applying the discount for the given weeks
+        blended_rate = total_billable_amount / (total_quantity * weeks)
         return blended_rate, total_billable_amount
 
-    # Add a new role to the resource tracker
     def add_new_role(self, name, rate_per_hour):
+        """
+        Add a new role to the resource tracker with the given name and rate per hour.
+        :param name: Name of the new role
+        :param rate_per_hour: Billable rate per hour for the new role
+        """
         role = Role(name, rate_per_hour)
         self.roles[name] = {'role': role, 'quantity': 0}
         print(f"{name} with rate ${rate_per_hour:.2f} per hour added as Role {self.next_role_number}")
         self.next_role_number += 1
 
 
-# Function to calculate the discount based on contract length
-def contract_length_discount(length):
-    if length == "1 year":
-        return 0.05
-    elif length == "2 years":
-        return 0.10
-    elif length == "3 years":
-        return 0.135
-    else:
-        return 0.0  # No discount for unknown contract lengths
-
-
-# Function to print available roles and their rates
 def print_available_roles(roles):
+    """
+    Print available roles and their rates.
+    :param roles: List of roles and their rate_per_hour information
+    """
     print("Available roles:")
     for index, role in enumerate(roles, start=1):
         print(f"{index}. {role['name']} (${role['rate_per_hour']:.2f} per hour)")
 
-# Main function to run the resource tracker program
+
 def main():
     available_roles = [
+        # List of available roles with their names and rate_per_hour
         {"name": "Project Manager", "rate_per_hour": 95.00},
         {"name": "Senior Developer", "rate_per_hour": 125.00},
         {"name": "Junior Developer", "rate_per_hour": 95.00},
@@ -86,22 +87,6 @@ def main():
     ]
 
     resource_tracker = ResourceTracker()
-
-    # Get the contract length input from the user and set the year_discount accordingly
-    contract_length_input = input("Enter the contract length (1, 2, or 3 years): ").strip().lower()
-    if contract_length_input == '1':
-        contract_length = "1 year"
-        year_discount = 0.05
-    elif contract_length_input == '2':
-        contract_length = "2 years"
-        year_discount = 0.10
-    elif contract_length_input == '3':
-        contract_length = "3 years"
-        year_discount = 0.135
-    else:
-        print("Invalid input. Setting the contract length to 1 year.")
-        contract_length = "1 year"
-        year_discount = 0.05
 
     while True:
         # Show available roles and options
@@ -130,7 +115,7 @@ def main():
 
             role = Role(role_data['name'], role_data['rate_per_hour'])
             quantity = int(input(f"Enter the quantity for {role_data['name']}: "))
-            resource_tracker.add_role(role, quantity, contract_length)
+            resource_tracker.add_role(role, quantity)
 
             add_another = input("Do you want to add another role? (yes/no): ").lower()
             if add_another != "yes":
@@ -139,13 +124,13 @@ def main():
             print("Invalid choice. Please try again.")
             continue
 
-    # Calculate the blended rate and total billable amount
-    blended_rate, total_billable_amount = resource_tracker.calculate_blended_rate()
-    print(f"Blended billable rate for {contract_length}: ${blended_rate:.2f} per hour")
+    # Ask for the number of weeks and discount percentage
+    weeks = int(input("Enter the number of weeks: "))
+    discount_percentage = float(input("Enter the discount percentage to apply (e.g., 10 for 10%): "))
 
-    # Calculate the total bill based on the selected contract length and apply the year discount
-    total_bill = 50 * 46 * total_billable_amount * (1 - year_discount)
-    print(f"Total bill for {contract_length}: ${total_bill:.2f}")
+    # Calculate the blended rate and total billable amount with the entered discount and number of weeks
+    blended_rate, total_billable_amount = resource_tracker.calculate_blended_rate(weeks, discount_percentage)
+    print(f"Blended billable rate (after {discount_percentage}% discount for {weeks} weeks): ${blended_rate:.2f} per hour")
 
     restart = input("Do you want to reset and start over? (yes/no): ").lower()
     if restart == "yes":
@@ -156,4 +141,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
