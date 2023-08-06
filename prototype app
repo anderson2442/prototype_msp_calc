@@ -125,7 +125,7 @@ def main():
             continue
 
     # Ask for the number of weeks and discount percentage
-    weeks = int(input("Enter the number of weeks: "))
+    weeks = int(input("Enter the number of weeks from 12 to 104: "))
     discount_percentage = float(input("Enter the discount percentage to apply (e.g., 10 for 10%): "))
 
     # Calculate the blended rate and total billable amount with the entered discount and number of weeks
